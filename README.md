@@ -14,6 +14,9 @@ Also required, is FTDI-driver, which contains some dlls needed by pylablib,
 install here: https://ftdichip.com/drivers/
 guidlines: https://ftdichip.com/document/installation-guides/
 
+NOTE: The only dll file that was really needed is ftd2xx.dll
+and it is needed to be pasted in one of Windows' dll paths (like "C:\Windows\System32", "C:\Windows\SysWOW64").
 
-
+We had an issue that pylablib searched for ftd2xx.dll, not ftd2xx64.dll, but required the 64-bit file 
+to run properly, so we removed the "64" from ftd2xx64.dll file name and placed it in System32 - and that worked :)
 
