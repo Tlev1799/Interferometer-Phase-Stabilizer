@@ -33,7 +33,7 @@ for i in range(10):
     time.sleep(0.1)
 
 if 0 == len(val):
-    print("FUCK")
+    print("NOOO!")
 else:
     print("YESSS!")
 
