@@ -1,5 +1,7 @@
 class engine_controller:
     def __init__(self):
+        x=4
+        c=x+5
         pass
 
     def connect(self):
