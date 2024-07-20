@@ -24,6 +24,39 @@ class CameraController:
         self.cam = Thorlabs.ThorlabsTLCamera()
         print("Successfully connected!")
 
+    def prepare_camera(self):
+        self.cam.setup_acquisition()
+        self.cam.start_acquisition()
+
+        if self.is_capture_blocking():
+            # This means the camera needs time to warm up...
+            # I have absolutely no idea why this happens, the
+            # ThorCam application seems to work just fine.
+            warnings.warn("Initial capturing attempt has failed. \
+                          The camera probably needs some time to warm up, \
+                          this will take 20 minutes.")
+            time.sleep(TWENTY_MINUTES)
+            print("20 Minutes passed, reopening camera")
+
+            self.restart_camera()
+
+        print("Camera is ready!")
+
+    def capture_frames(self, num_frames):
+        # Begin capture
+        self.cam.start_acquisition()
+
+        # Read frames
+        frames = []
+        while len(frames) < num_frames:
+            frames += self.cam.read_multiple_images()
+
+        # Stop capture
+        self.cam.stop_acquisition()
+
+        # Return the last frames
+        return frames[-num_frames:]
+
     def begin_continous_capture(self):
         """_summary_
         """
@@ -75,7 +108,6 @@ class CameraController:
         self.cam.close()
         self.cam.open()
         self.cam.setup_acquisition()
-        self.cam.start_acquisition()
         print("All done, this should work :)")
 
     def is_capture_blocking(self):

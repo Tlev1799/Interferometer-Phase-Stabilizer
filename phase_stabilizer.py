@@ -1,9 +1,6 @@
-# TODO: Implement a function that receives la ist of frames,
+# TODO: Implement a function that receives a list of frames,
 #       and returns a list of phases of the fringes in the frames.
-
-# TODO (?): Implement a function that receives a list of frames and converts them
-#           to a more convinient format before passing them to the above function.
-
+#       For each frame return the unwrapped phase in the middle of the frame.
 
 # TODO: This file should contain the main function.
 #       - Initialize the camera and engine (engine is not implemented yet)
