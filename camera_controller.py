@@ -4,8 +4,7 @@ from pylablib.devices import Thorlabs
 from constants import TWENTY_MINUTES
 
 
-print("BLAHHHHHHHHHHHH")
-class camera_controller:
+class CameraController:
     def __init__(self):
         self.cam = None
         self.find_camera()
