@@ -12,6 +12,7 @@
 #           5) Tell the engine how to move.
 
 from camera_controller import CameraController
+import numpy as np
 
 def extract_phase(frames):
     phase = 0
@@ -43,37 +44,88 @@ def get_max(arr):
 
     return max_val, index
 
+def find_min_index(frame):
+
+    min_val = np.inf
+    min_left_index = 0
+
+    # Go over middle row
+    middle_row = frame[len(frame[0]) / 2]
+    for i, e in enumerate(middle_row):
+        if min_val > e:
+            min_val = e
+            min_left_index = i
+    
+    # If there are multiple instances of the max value, find the middle of it
+    index = min_left_index
+    while middle_row[index] == middle_row[index+1]:
+        index += 1
+
+    # NOTE: If there is an even amount of min value, the middle is of width 2 (2 pixels fit).
+    # This gives the left one.
+    min_index = (min_left_index + index) / 2
+
+    # return (middle_index, left_index, right_index) of the min value
+    return min_index, min_left_index, index
+
+def find_max_index(frame):
+
+    max_val = -1
+    max_left_index = 0
+
+    # Go over middle row
+    middle_row = frame[len(frame[0]) / 2]
+    for i, e in enumerate(middle_row):
+        if max_val < e:
+            max_val = e
+            max_left_index = i
+    
+    # If there are multiple instances of the max value, find the middle of it
+    index = max_left_index
+    while middle_row[index] == middle_row[index+1]:
+        index += 1
+
+    # NOTE: If there is an even amount of max value, the middle is of width 2 (2 pixels fit).
+    # This gives the left one.
+    max_index = (max_index + index) / 2
+
+    # return (middle_index, left_index, right_index) of the max value
+    return max_index, max_left_index, index
+
+def extract_required_correction(frame, should_find_min=True):
+    # Find min/max and calculate distance (in pixels) from the middle.
+    distance = 0
+    x, left_of_x, right_of_x = 0, 0, 0
+
+    if should_find_min:
+        x, left_of_x, right_of_x = find_min_index(frame)
+    else:
+        x, left_of_x, right_of_x = find_max_index(frame)
+
+   # 
+
+    
+
+
+    return distance
+
+
 def main():
-    # Connect to camera and begin capture.
+    # Connect to camera.
     cc = CameraController()
-    cc.begin_continous_capture()
 
-    # Amount of frames required for a single phase to be extracted.
-    frames_per_phase = 10
+    # Prepare camera.
+    cc.prepare_camera()
 
-    # Amount of phases required to decide the next engine correction.
-    phases_per_correction = 2
+    # True for stabling destructive interference, false for instructive.
+    stable_min = False
 
-    frames = []
-    phases = []
-
-    # Start reading_frames contoniously
     try:
         while True:
-            frame = cc.get_frames(1)
-            print("Got {} frame".format(len(frame)))
-            value, index = get_max(frame)
-
-            print("max value was found at {0} and its: {1}", index, value)
-            # frames += cc.get_frames(frames_per_phase)
-            # if len(frames) >= frames_per_phase:
-            #     print("Captured {0} frames, extracting phase")
-            #     phases += extract_phase(frames)
-
-            #     if len(phases) >= phases_per_correction:
-            #         print("Extracted {0} phases, adjusting engine")
-            #         adjust_engine(phases)
-
+            # Get the newest frame.
+            frame = cc.capture_frames(1)
+            distance = extract_required_correction(frame, should_find_min=stable_min)
+            
     finally:
         cc.shutdown()
 

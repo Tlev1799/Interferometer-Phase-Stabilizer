@@ -79,22 +79,22 @@ class CameraController:
 
             self.restart_camera()
 
-    def get_frames(self, num_frames):
-        """_summary_
+    # def get_frames(self, num_frames):
+    #     """_summary_
 
-        Parameters
-        ----------
-        num_frames : _type_
-            _description_
+    #     Parameters
+    #     ----------
+    #     num_frames : _type_
+    #         _description_
 
-        Returns
-        -------
-        _type_
-            _description_
-        """
-        frames = self.cam.read_multiple_images(rng=(0, num_frames))
-        print("Requested {0} frames, read {1}".format(num_frames, len(frames)))
-        return frames
+    #     Returns
+    #     -------
+    #     _type_
+    #         _description_
+    #     """
+    #     frames = self.cam.read_multiple_images(rng=(0, num_frames))
+    #     print("Requested {0} frames, read {1}".format(num_frames, len(frames)))
+    #     return frames
     
     def shutdown(self):
         """_summary_
