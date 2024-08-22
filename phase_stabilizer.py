@@ -13,9 +13,10 @@ lock = threading.Lock()
 
 # Global variables for communication between threads.
 g_frame = None
-g_step_size = 10**-9 # Step size of the feedback.
-g_should_adjust = False
+#g_step_size = 10**-9 # Step size of the feedback.
+g_should_adjust = True
 g_min_distance_fix = 30
+g_max_distance_fix = 300
 
 # Counter for saving frames in files.
 saved_frames_counter = 0
@@ -89,7 +90,7 @@ def camera_thread(cc):
                 # Convert the image to type that cv2 supports.
                 #frame_uint8 = cv2.convertScaleAbs(g_frame, alpha=(255.0/65535.0))
                 #normalized_frame = cv2.normalize(g_frame, None, 0, 255, cv2.NORM_MINMAX)
-                g_frame = cv2.transpose(g_frame)
+                #g_frame = cv2.transpose(g_frame)
                 frame_uint8 = (g_frame / 1023.0)*255
                 
 
@@ -116,9 +117,10 @@ def algorithm_thread(ec):
 
     # Declare globals to be used.
     global g_frame
-    global g_step_size
+    #global g_step_size
     global g_should_adjust
     global g_min_distance_fix
+    global g_max_distance_fix
 
     #index = 0
     debug_counter = 1
@@ -136,35 +138,42 @@ def algorithm_thread(ec):
             # Adjust the engine accordingly.
             if g_should_adjust:
                 distance = get_distance_to_adjust(frame, should_find_min=False)
-                with open(f"debug\\debug_text{file_name_counter}.txt", "a") as f:
-                    f.write(f"frame: {frame}\n\nFound max at: {((len(frame)/2) - 0.5) - distance}\nDistance to middle: {distance}\n\n\n")
-                debug_counter += 1
-                if 0 == debug_counter % 100:
-                    debug_counter = 1
-                    file_name_counter += 1
+                # with open(f"debug\\debug_text{file_name_counter}.txt", "a") as f:
+                #     f.write(f"frame: {frame}\n\nFound max at: {((len(frame)/2) - 0.5) - distance}\nDistance to middle: {distance}\n\n\n")
+                # debug_counter += 1
+                # if 0 == debug_counter % 100:
+                #     debug_counter = 1
+                #     file_name_counter += 1
                 
                 #print(f"Distance calculated {distance}")
-                if np.abs(distance) > g_min_distance_fix:
-                    ec.move_engine(g_step_size*distance)
+                abs_distance = np.abs(distance)
+                if abs_distance > g_min_distance_fix and abs_distance < g_max_distance_fix:
+                    # Normalize the distance to move between -50 to 50 nm.
+                    sign_distance = distance / abs_distance
+
+                    norm_distance = (abs_distance / (g_max_distance_fix - g_min_distance_fix)) * 50
+                    final_distance = norm_distance * sign_distance * (10**-6)
+
+                    ec.move_engine(position=final_distance)
 
         # Wait for 100ms to let g_frame time to update in the other thread.
         time.sleep(0.1)
 
 
-def set_feedback_step_size():
-    try:
-        new_k = float(input("Enter new value for size step"))
+# def set_feedback_step_size():
+#     try:
+#         new_k = float(input("Enter new value for size step"))
 
-        if new_k <= 0 or new_k >= 1:
-            print("ERROR: K must satisfy: 0 < k < 1")
-            return
+#         if new_k <= 0 or new_k >= 1:
+#             print("ERROR: K must satisfy: 0 < k < 1")
+#             return
         
-        # Update k synchorniously
-        with lock:
-            g_step_size = new_k
+#         # Update k synchorniously
+#         with lock:
+#             g_step_size = new_k
 
-    except ValueError:
-        print("Invalid value for k")
+#     except ValueError:
+#         print("Invalid value for k")
 
 
 def manual_adjust(cc, ec):
@@ -175,7 +184,7 @@ def manual_adjust(cc, ec):
             try:
                 # Manually adjsut distance.
                 distance = float(input("Enter distance to adjust: "))
-                ec.move_engine(g_step_size*distance)
+                ec.move_engine(position=distance)
 
                 # Display updated frame for 1 second.
                 time.sleep(0.01)
@@ -236,10 +245,25 @@ def save_frame_in_file():
 
 def control_engine(ec):
     try:
-        value = float(input("Enter value to adjust: "))
-        ec.move_engine(value)
-    except ValueError:
-        print("Invalid value for distance")
+        value = float(input("Enter engine position: "))
+        ec.move_engine(position=value)
+    except:
+        print("ERROR")
+        return
+
+
+def set_engine_data(ec):
+    try:
+        value = float(input("Value for acceleration: "))
+        if 0 != value:
+            ec.set_acceleration(value)
+
+        value = float(input("Value for velocity: "))
+        if 0 != value:
+            ec.set_velocity(value)
+    except:
+        print("Error")
+        return
 
 
 def set_min_distance():
@@ -254,40 +278,81 @@ def set_min_distance():
     with lock:
         g_min_distance_fix = val
 
+def set_engine_acc(ec):
+    try:
+        val = float(input("Enter new value for engine acceleration: "))
+    except ValueError as e:
+        print(f"Invalid value received, {e}")
+        return
+
+    with lock:
+        ec.set_velocity(val)
+
+def set_engine_vel(ec):
+    try:
+        val = float(input("Enter new value for engine velocity: "))
+    except ValueError as e:
+        print(f"Invalid value received, {e}")
+        return
+
+    with lock:
+        ec.set_acceleration(val)
+
 def debug_thread(cc, ec):
     
     # Declare globals to be used.
     global g_frame
-    global g_step_size
+    #global g_step_size
     global g_should_adjust
 
+    while True:
+        try:
+            cmd = str(input("Enter next command: "))
+            cmd = cmd[0]
+            if cmd == "s":
+                print("Setting minimum distance for correction")
+                set_min_distance()
+            elif cmd == "a":
+                print("Setting engine acceleration")
+                set_engine_acc(ec)
+            elif cmd == "v":
+                print("Setting engine velocity")
+                set_engine_vel(ec)
+            elif cmd == "p":
+                print("Pausing/Resuming the stabilizing algorithm")
+                pause_resume_engine()
+
+        except Exception as e:
+            print("Some error..")
+
     # For manually adjusting engine.
-    keyboard.add_hotkey('a', manual_adjust, args=(cc, ec))
+    #keyboard.add_hotkey('a', manual_adjust, args=(cc, ec))
 
     # Change step size (value of k)
-    keyboard.add_hotkey('k', set_feedback_step_size)
+    # keyboard.add_hotkey('k', set_feedback_step_size)
 
-    # Display calculated distance to adjust for the current frame.
-    keyboard.add_hotkey('d', display_distance)
+    # # Display calculated distance to adjust for the current frame.
+    # keyboard.add_hotkey('d', display_distance)
 
-    # Set exposure time.
-    keyboard.add_hotkey('x', set_exposure_time, args=(cc, ))
+    # # Set exposure time.
+    # keyboard.add_hotkey('x', set_exposure_time, args=(cc, ))
 
-    # Pause/resume adjusting algorithm.
-    keyboard.add_hotkey('p', pause_resume_engine)
+    # # Pause/resume adjusting algorithm.
+    # keyboard.add_hotkey('p', pause_resume_engine)
 
-    # Set break point (Blocks camera footage !)
-    keyboard.add_hotkey('b', pdb, args=(cc, ec))
+    # # Set break point (Blocks camera footage !)
+    # keyboard.add_hotkey('b', pdb, args=(cc, ec))
 
-    keyboard.add_hotkey('s', save_frame_in_file)
+    # #keyboard.add_hotkey('s', save_frame_in_file)
 
-    keyboard.add_hotkey('z', control_engine, args=(ec, ))
+    # keyboard.add_hotkey('z', control_engine, args=(ec, ))
 
-    keyboard.add_hotkey('m', set_min_distance)
+    # keyboard.add_hotkey('s', set_engine_data, args=(ec, ))
 
-    # Wait forever for different keys. 'e' will exit the debug thread. 
-    keyboard.wait('e')
+    # keyboard.add_hotkey('m', set_min_distance)
 
+    # # Wait forever for different keys. 'e' will exit the debug thread. 
+    # keyboard.wait('e')
 
 def main():
 
@@ -303,6 +368,21 @@ def main():
         pass
         ec = EngineController()
         ec.connect()
+        #import ipdb; ipdb.set_trace()
+        print("Open channel")
+        ec.open_channel(1)
+        time.sleep(15)
+        print("Moving engine")
+        ec.move_engine()
+
+        print("Before setting")
+        ec.get_movement_data()
+        ec.set_velocity(10**-3)
+        ec.set_acceleration(10**-3)
+
+        print("After setting")
+        ec.get_movement_data()
+
     except:
         print("Error connecting to engine, exiting")
         exit()
