@@ -1,7 +1,6 @@
 import numpy as np
 
 def find_max_x_coordinate(frame):
-
     #print("Good, max finder was called")
     max_val = -1
     max_left_index = 0
@@ -9,6 +8,7 @@ def find_max_x_coordinate(frame):
     # Go over middle row
     #print("Getting middle frame")
     middle_row = frame[int(len(frame) / 2)]
+
     #print(f"middle row: {middle_row}")
 
     # NOTE: We want to find the longest streak of the maximum value.
@@ -55,7 +55,6 @@ def find_max_x_coordinate(frame):
     # So the middle coordinate is exactly between them.
     max_coordinate = (max_left_index + index) / 2.0
     #print(f"max coordinate: {max_coordinate}")
-
 
     # return (middle_index, left_index, right_index) of the max value
     return max_coordinate, max_left_index, index

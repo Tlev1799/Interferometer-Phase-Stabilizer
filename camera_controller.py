@@ -25,6 +25,9 @@ class CameraController:
         self.cam = Thorlabs.ThorlabsTLCamera()
         print("Successfully connected!")
 
+    def is_opened(self):
+        return not self.cam
+
     def debug_prepare(self):
         self.cam.setup_acquisition()
         print("Camera may return None, check for it")
