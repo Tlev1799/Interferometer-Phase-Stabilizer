@@ -2,8 +2,8 @@ import time
 import warnings
 import numpy as np
 from pylablib.devices import Thorlabs
-from constants import TWENTY_MINUTES
 
+TWENTY_MINUTES = 60*20
 
 class CameraController:
     def __init__(self):

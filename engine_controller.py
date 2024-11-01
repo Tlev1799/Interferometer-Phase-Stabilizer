@@ -19,7 +19,6 @@ class EngineController:
         self.pidevice.SVO(axis, 0)
 
     def move_engine(self, distance=0, axis=1):
-        #import ipdb; ipdb.set_trace()
         self.pidevice.MOV(axis, self.pidevice.qPOS(axis)[axis] + distance)
 
     def get_movement_data(self):

@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Load the data from text files
-max_val = np.loadtxt('max_val_arr.txt', delimiter=',', dtype=int)  # Load as integers
-corr_dist = np.loadtxt('correction_dist_arr.txt', delimiter=',', dtype=int) # Load as floats
+max_val = np.loadtxt('X_coord.txt', dtype=int)  # Load as integers
+corr_dist = np.loadtxt('X_coord.txt', delimiter=',', dtype=float) # Load as floats
 
 # bad_indexes = [95, 119, 183, 210, 223, 231, 250, 252, 285, 293]
 # corr_dist[bad_indexes] = -250
