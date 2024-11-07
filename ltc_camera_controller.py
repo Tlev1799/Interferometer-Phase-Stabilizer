@@ -1,5 +1,9 @@
 import cv2
 
+# Data for this specific camera model.
+camera_width = 1440
+camera_height = 1080
+
 class CameraController:
     def __init__(self, camera_index=1):
         self.cam = cv2.VideoCapture(camera_index)
@@ -7,7 +11,7 @@ class CameraController:
     def is_opened(self):
         return self.cam.isOpened()
 
-    def prepare_camera(self, height=1080, width=1440):
+    def prepare_camera(self, height=camera_height, width=camera_width):
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 

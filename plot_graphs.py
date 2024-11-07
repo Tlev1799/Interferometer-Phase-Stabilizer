@@ -1,33 +1,34 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Load the data from text files
-max_val = np.loadtxt('X_coord.txt', dtype=int)  # Load as integers
-corr_dist = np.loadtxt('X_coord.txt', delimiter=',', dtype=float) # Load as floats
+# Specify the filenames directly
+filename = "pixles_error_with_correction_old.txt"
+file2 = "pixles_error_no_correction_old.txt"
 
-# bad_indexes = [95, 119, 183, 210, 223, 231, 250, 252, 285, 293]
-# corr_dist[bad_indexes] = -250
-#import ipdb; ipdb.set_trace()
 
-# Create a figure with two subplots
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 10))
+# Read the array from the text file
+data = np.loadtxt(filename, delimiter=",")
+data2 = np.loadtxt(file2)
 
-# Plot max_val in the first subplot
-ax1.plot(np.arange(len(max_val)), max_val, color='b', marker='+')
-ax1.set_title('Max Value per Frame')
-ax1.set_xlabel('Frames')
-ax1.set_ylabel('Max Value (int)')
-ax1.grid()
+# Create an x-axis representing the frames
+# Assuming each array has the same number of rows (frames)
+num_frames1 = data.shape[0]
+frames1 = np.arange(1, num_frames1 + 1)
 
-# Plot corr_dist in the second subplot
-ax2.plot(np.arange(len(corr_dist)), corr_dist, color='r', marker='o')
-ax2.set_title('Correlation Distance per Frame')
-ax2.set_xlabel('Frames')
-ax2.set_ylabel('Correlation Distance (float)')
-ax2.grid()
+num_frames2 = data2.shape[0]
+frames2 = np.arange(1, num_frames2 + 1)
 
-# Adjust layout to prevent overlap
+frames = np.arange(1, 1000)
+
+
+plt.plot(frames, data[:999], label="Stage Stabilizer On")
+plt.plot(frames, data2[:999], label="Stage Stabilizer Off")
+plt.title(f'Detected Error')
+plt.xlabel('Frames')
+plt.ylabel('Error [px]')
+plt.grid()
+plt.legend()
+
+# Adjust layout
 plt.tight_layout()
-
-# Show the plot
 plt.show()

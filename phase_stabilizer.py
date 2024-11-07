@@ -5,7 +5,6 @@ import cv2
 import time
 import threading
 import numpy as np
-from graphs import Graphs as gr
 from scipy.ndimage import rotate
 
 lock = threading.Lock()
@@ -46,7 +45,6 @@ def get_distance_to_adjust(frame, should_find_min=False):
         np.savetxt("X_coord.txt", g_max_val_coord_X, delimiter = ',', fmt="%d")
         g_not_saved = False
 
-    
     left_of_x -= 1
     right_of_x += 1
 
@@ -102,7 +100,7 @@ def camera_thread(cc):
 
 
 # Continously calculate required engine adjustment.
-def algorithm_thread(ec, gr):
+def algorithm_thread(ec):
     global g_frame
     global g_step_size
     global g_should_adjust
@@ -124,9 +122,8 @@ def algorithm_thread(ec, gr):
                 # Adjust the engine accordingly.
                 distance = get_distance_to_adjust(g_frame, should_find_min=False)
                 if g_should_adjust:
-                    #print((g_max_val_coord_X,))
-                    #gr.update(np.arange(len(g_max_val_coord_X)), g_max_val_coord_X)
-                    
+                    # TODO: Export the translation of pixels to movement to the engine class.
+                   
                     # TODO: Improve implementation of translation from pixels to nm.
                     abs_distance = np.abs(distance)
                     if abs_distance > g_min_distance_fix and abs_distance < g_max_distance_fix:
@@ -145,14 +142,10 @@ def algorithm_thread(ec, gr):
                         final_distance *= g_step_size
 
                         # NOTE: This is Tal's suggested method, which didn't quite work for us.
-                        # (distance*lamda)/(4*D) = 1.055
+                        # (distance*lamda)/(4*D) = 1.055 * distance
                         #final_distance = distance * 1.055 * (10**-6)
+                        # ltc camera pixel width ~1.3um
 
-                        if len(g_distances) < 1000:
-                            g_distances = np.append(g_distances, distance)
-                        elif g_dist_not_saved:
-                            np.savetxt("distances.txt", g_distances, delimiter=",", fmt="%.6f")
-                            g_dist_not_saved = False
                         ec.move_engine(distance=final_distance)
 
             time.sleep(0.1)
@@ -163,85 +156,6 @@ def algorithm_thread(ec, gr):
         # Close engine.
         print("CLOSING ENGINE")
         ec.close()
-        #gr.end_update()
-
-
-def pause_resume_engine():
-    global g_should_adjust
-
-    with lock:
-        g_should_adjust = not g_should_adjust
-
-def set_min_distance():
-    global g_min_distance_fix
-
-    try:
-        val = float(input("Enter new min distance to fix: "))
-    except ValueError as e:
-        print(f"Invalid value received, {e}")
-        return
-
-    with lock:
-        g_min_distance_fix = val
-
-def set_engine_acc(ec):
-    try:
-        val = float(input("Enter new value for engine acceleration: "))
-    except ValueError as e:
-        print(f"Invalid value received, {e}")
-        return
-
-    with lock:
-        ec.set_velocity(val)
-
-def set_engine_vel(ec):
-    try:
-        val = float(input("Enter new value for engine velocity: "))
-    except ValueError as e:
-        print(f"Invalid value received, {e}")
-        return
-
-    with lock:
-        ec.set_acceleration(val)
-
-def set_step_size():
-    global g_step_size
-
-    try:
-        val = float(input("Enter new step size: "))
-    except ValueError as e:
-        print(f"Invalid value received, {e}")
-        return
-
-    with lock:
-        g_step_size = val
-
-def debug_thread(cc, ec):
-    global g_frame
-    global g_should_adjust
-
-    while True:
-        try:
-            cmd = str(input("Enter next command: "))
-            cmd = cmd[0]
-            if cmd == "s":
-                print("Setting minimum distance for correction")
-                set_min_distance()
-            elif cmd == "a":
-                print("Setting engine acceleration")
-                set_engine_acc(ec)
-            elif cmd == "v":
-                print("Setting engine velocity")
-                set_engine_vel(ec)
-            elif cmd == "p":
-                print("Pausing/Resuming the stabilizing algorithm")
-                pause_resume_engine()
-            elif cmd == "t":
-                print("Setting correction step size")
-                set_step_size()
-
-        except Exception as e:
-            print("Some error..")
 
 
 def main():
@@ -289,17 +203,8 @@ def main():
     while g_frame is None:
         time.sleep(0.1)
 
-    # Begin loop of debug thread.
-    dbg_thread = threading.Thread(target=debug_thread, args=(cc, ec), daemon=True)
-    dbg_thread.start()
-
-    graph = None
-    # graph = gr()
-    # frames = np.arange(len(g_max_val_coord_X))
-    # graph.prepare(frames, g_max_val_coord_X)
-
     # Camera is being run in the second thread, we are the algorithm thread.
-    algorithm_thread(ec, graph)
+    algorithm_thread(ec)
 
 
 if __name__ == '__main__':

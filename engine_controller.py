@@ -1,4 +1,5 @@
 from pipython import GCSDevice
+import time
 
 class EngineController:
     def __init__(self):
@@ -10,10 +11,17 @@ class EngineController:
         self.pidevice.InterfaceSetupDlg()
         print("qIDN is: {}".format(self.pidevice.qIDN()))
 
+    def prepare_engine(self, axis, acc, vel):
+        self.open_channel(axis)
+        self.set_acceleration(acc)
+        self.set_velocity(vel)
+
     def open_channel(self, axis):
         self.pidevice.SVO(axis, 1)
         self.pidevice.FRF()
-        print("Finished FRF?")
+        print("Calibration...")
+        time.sleep(15)
+        print("Done!")
         
     def close_channel(self, axis):
         self.pidevice.SVO(axis, 0)

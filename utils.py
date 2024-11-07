@@ -48,7 +48,7 @@ def find_max_x_coordinate(frame):
     
     # If there are multiple instances of the max value, find the middle of it
     index = max_left_index
-    while middle_row[index] == middle_row[index+1]:
+    while (index+1) < len(middle_row) and middle_row[index] == middle_row[index+1]:
         index += 1
 
     # NOTE: If there is an even amount of max value, the middle is of width 2 (2 pixels fit).
