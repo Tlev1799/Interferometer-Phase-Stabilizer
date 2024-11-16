@@ -17,8 +17,8 @@ for i in range(10):
 if 0 == len(val):
     print("No frames captured, restarting camera")
 
-    print("Wait for 15 minuts.")
-    time.sleep(60*10)
+    print("Wait for 20 minuts.")
+    time.sleep(60*20)
     cam.close()
     cam.open()
     cam.setup_acquisition()
