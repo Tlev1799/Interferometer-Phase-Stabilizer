@@ -1,4 +1,4 @@
-# UTEM System Stabilizer
+# UTEM System Phase Stabilizer
 
 ## Requirements
 
