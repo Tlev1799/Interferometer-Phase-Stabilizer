@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Nov  7 12:06:56 2024
-
-@author: Laser
+Stabilizer Feedback Loop File
 """
 
 import cv2
