@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Nov  7 17:05:23 2024
-
-@author: Laser
+Camera Controller File
 """
 
 from pyflycap2.interface import Camera
