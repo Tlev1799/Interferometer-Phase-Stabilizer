@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Nov  7 11:30:50 2024
-
-@author: Laser
+Stage Controller File
 """
 from newportxps import NewportXPS
 
